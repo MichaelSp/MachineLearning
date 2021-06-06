@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <title>Coin Prediction</title>
+</head>
+<body>
+<script type="text/javascript">
+    document.body.style.position = 'relative'
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const width = 1000
+    const height = 600
+
+    const chart = LightweightCharts.createChart(container, {
+        width: width,
+        height: height,
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+        },
+        localization: {
+            dateFormat: 'dd.MM.yyyy',
+        },
+    })
+    const predictionColor = 'rgba(255,86,89,0.59)'
+    const existingSeries = chart.addLineSeries()
+    const predictedSeries = chart.addLineSeries({
+        color: predictionColor,
+        title: "Prediction",
+        priceLineColor: predictionColor,
+    })
+
+    const renameDateToTime = function (raw) {
+        return raw.map(d => {
+            d.time = new Date(d.date).toISOString()
+            delete d["date"]
+            return d
+        })
+    }
+
+    fetch("https://ml.klopapier.exchange/technical/ETH-USD?days=5")
+        .then(function (response) {
+            return response.json()
+        })
+        .then(function (raw) {
+            const existing = renameDateToTime(raw[0])
+            const predicted = renameDateToTime(raw[1])
+
+            existingSeries.setData(existing)
+            predictedSeries.setData(existing.slice(existing.length - 1).concat(predicted))
+        })
+        .catch((error) => {
+            console.error('Error:', error)
+        })
+
+</script>
+</body>
+</html>
